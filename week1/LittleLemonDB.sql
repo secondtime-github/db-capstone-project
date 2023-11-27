@@ -15,14 +15,28 @@ CREATE SCHEMA IF NOT EXISTS `LittleLemonDB` DEFAULT CHARACTER SET utf8 ;
 USE `LittleLemonDB` ;
 
 -- -----------------------------------------------------
+-- Table `LittleLemonDB`.`Customers`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `LittleLemonDB`.`Customers` (
+  `CustomerID` INT NOT NULL,
+  `FullName` VARCHAR(45) NULL DEFAULT NULL,
+  `ContactNumber` VARCHAR(45) NULL DEFAULT NULL,
+  `Email` VARCHAR(45) NULL DEFAULT NULL,
+  PRIMARY KEY (`CustomerID`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8;
+
+
+-- -----------------------------------------------------
 -- Table `LittleLemonDB`.`Employees`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `LittleLemonDB`.`Employees` (
   `EmployeeID` INT NOT NULL,
-  `Role` VARCHAR(45) NULL,
-  `Salary` INT NULL,
+  `Role` VARCHAR(45) NULL DEFAULT NULL,
+  `Salary` INT NULL DEFAULT NULL,
   PRIMARY KEY (`EmployeeID`))
-ENGINE = InnoDB;
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8;
 
 
 -- -----------------------------------------------------
@@ -30,31 +44,22 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `LittleLemonDB`.`Bookings` (
   `BookingID` INT NOT NULL AUTO_INCREMENT,
-  `TableNo` INT NOT NULL,
-  `GuestFirstName` VARCHAR(100) NULL,
-  `GuestLastName` VARCHAR(100) NULL,
-  `BookingSlot` DATETIME NOT NULL,
-  `EmployeeID` INT NULL,
+  `TableNumber` INT NOT NULL,
+  `BookingDate` DATETIME NOT NULL,
+  `CustomerID` INT NULL DEFAULT NULL,
+  `EmployeeID` INT NULL DEFAULT NULL,
   PRIMARY KEY (`BookingID`),
   INDEX `employee_id_fk_idx` (`EmployeeID` ASC) VISIBLE,
+  INDEX `customer_id_fk_idx` (`CustomerID` ASC) VISIBLE,
+  CONSTRAINT `customer_booking_id_fk`
+    FOREIGN KEY (`CustomerID`)
+    REFERENCES `LittleLemonDB`.`Customers` (`CustomerID`),
   CONSTRAINT `employee_id_fk`
     FOREIGN KEY (`EmployeeID`)
-    REFERENCES `LittleLemonDB`.`Employees` (`EmployeeID`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
-ENGINE = InnoDB;
-
-
--- -----------------------------------------------------
--- Table `LittleLemonDB`.`Customers`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `LittleLemonDB`.`Customers` (
-  `CustomerID` INT NOT NULL,
-  `FullName` VARCHAR(45) NULL,
-  `ContactNumber` VARCHAR(45) NULL,
-  `Email` VARCHAR(45) NULL,
-  PRIMARY KEY (`CustomerID`))
-ENGINE = InnoDB;
+    REFERENCES `LittleLemonDB`.`Employees` (`EmployeeID`))
+ENGINE = InnoDB
+AUTO_INCREMENT = 10
+DEFAULT CHARACTER SET = utf8;
 
 
 -- -----------------------------------------------------
@@ -62,44 +67,11 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `LittleLemonDB`.`Delivery` (
   `DeliveryID` INT NOT NULL,
-  `DeliveryDate` DATETIME NULL,
-  `DeliveryStatus` VARCHAR(45) NULL,
+  `DeliveryDate` DATETIME NULL DEFAULT NULL,
+  `DeliveryStatus` VARCHAR(45) NULL DEFAULT NULL,
   PRIMARY KEY (`DeliveryID`))
-ENGINE = InnoDB;
-
-
--- -----------------------------------------------------
--- Table `LittleLemonDB`.`Orders`
--- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `LittleLemonDB`.`Orders` (
-  `OrderID` INT NOT NULL,
-  `CustomerID` INT NULL,
-  `BookingID` INT NULL,
-  `DeliveryID` INT NULL,
-  `TableNo` INT NULL,
-  `OrderDate` DATETIME NULL,
-  `Quantity` INT NULL,
-  `BillAmout` INT NULL,
-  PRIMARY KEY (`OrderID`),
-  INDEX `booking_id_fk_idx` (`BookingID` ASC) VISIBLE,
-  INDEX `customer_id_fk_idx` (`CustomerID` ASC) VISIBLE,
-  INDEX `delivery_id_fk_idx` (`DeliveryID` ASC) VISIBLE,
-  CONSTRAINT `booking_id_fk`
-    FOREIGN KEY (`BookingID`)
-    REFERENCES `LittleLemonDB`.`Bookings` (`BookingID`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `customer_id_fk`
-    FOREIGN KEY (`CustomerID`)
-    REFERENCES `LittleLemonDB`.`Customers` (`CustomerID`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `delivery_id_fk`
-    FOREIGN KEY (`DeliveryID`)
-    REFERENCES `LittleLemonDB`.`Delivery` (`DeliveryID`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
-ENGINE = InnoDB;
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8;
 
 
 -- -----------------------------------------------------
@@ -107,11 +79,15 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `LittleLemonDB`.`MenuItems` (
   `ItemID` INT NOT NULL AUTO_INCREMENT,
-  `Name` VARCHAR(200) NULL,
-  `Type` VARCHAR(100) NULL,
-  `Price` INT NULL,
+  `Name` VARCHAR(200) NULL DEFAULT NULL,
+  `Type` VARCHAR(100) NULL DEFAULT NULL,
+  `Price` INT NULL DEFAULT NULL,
+  `CourseName` VARCHAR(45) NULL DEFAULT NULL,
+  `StarterName` VARCHAR(45) NULL DEFAULT NULL,
   PRIMARY KEY (`ItemID`))
-ENGINE = InnoDB;
+ENGINE = InnoDB
+AUTO_INCREMENT = 3
+DEFAULT CHARACTER SET = utf8;
 
 
 -- -----------------------------------------------------
@@ -119,23 +95,46 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `LittleLemonDB`.`Menus` (
   `MenuID` INT NOT NULL,
-  `OrderID` INT NULL,
   `ItemID` INT NOT NULL,
-  `Cuisine` VARCHAR(100) NULL,
+  `Cuisine` VARCHAR(100) NULL DEFAULT NULL,
+  `MenuName` VARCHAR(45) NULL DEFAULT NULL,
   PRIMARY KEY (`MenuID`, `ItemID`),
   INDEX `item_id_fk_idx` (`ItemID` ASC) VISIBLE,
-  INDEX `order_id_fk_idx` (`OrderID` ASC) VISIBLE,
   CONSTRAINT `item_id_fk`
     FOREIGN KEY (`ItemID`)
-    REFERENCES `LittleLemonDB`.`MenuItems` (`ItemID`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `order_id_fk`
-    FOREIGN KEY (`OrderID`)
-    REFERENCES `LittleLemonDB`.`Orders` (`OrderID`)
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION)
-ENGINE = InnoDB;
+    REFERENCES `LittleLemonDB`.`MenuItems` (`ItemID`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8;
+
+
+-- -----------------------------------------------------
+-- Table `LittleLemonDB`.`Orders`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `LittleLemonDB`.`Orders` (
+  `OrderID` INT NOT NULL,
+  `CustomerID` INT NULL DEFAULT NULL,
+  `MenuID` INT NULL DEFAULT NULL,
+  `BookingID` INT NULL DEFAULT NULL,
+  `DeliveryID` INT NULL DEFAULT NULL,
+  `TableNo` INT NULL DEFAULT NULL,
+  `OrderDate` DATETIME NULL DEFAULT NULL,
+  `Quantity` INT NULL DEFAULT NULL,
+  `Cost` INT NULL DEFAULT NULL,
+  PRIMARY KEY (`OrderID`),
+  INDEX `customer_id_fk_idx` (`CustomerID` ASC) VISIBLE,
+  INDEX `delivery_id_fk_idx` (`DeliveryID` ASC) VISIBLE,
+  INDEX `menu_id_fk_idx` (`MenuID` ASC) VISIBLE,
+  CONSTRAINT `customer_id_fk`
+    FOREIGN KEY (`CustomerID`)
+    REFERENCES `LittleLemonDB`.`Customers` (`CustomerID`),
+  CONSTRAINT `delivery_id_fk`
+    FOREIGN KEY (`DeliveryID`)
+    REFERENCES `LittleLemonDB`.`Delivery` (`DeliveryID`),
+  CONSTRAINT `menu_id_fk`
+    FOREIGN KEY (`MenuID`)
+    REFERENCES `LittleLemonDB`.`Menus` (`MenuID`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8;
 
 
 SET SQL_MODE=@OLD_SQL_MODE;
